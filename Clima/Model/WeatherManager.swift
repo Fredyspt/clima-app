@@ -13,6 +13,9 @@ protocol WeatherManagerDelegate {
     func didFailWithError(_ error: Error)
 }
 
+// WeatherManager responsibility is to perform API calls, handle API response by parsing JSON into a Swift
+// object, and if a delegate is set, it will inform to the delegate whenever the API responded successfully
+// or failed.
 struct WeatherManager {
     private var apiKey: String {
         var apiPlistDict: [String: Any]?
@@ -36,8 +39,13 @@ struct WeatherManager {
     let weatherURL = "https://api.openweathermap.org/data/2.5/weather?units=metric"
     var delegate: WeatherManagerDelegate?
     
-    func fetchWeather(city: String) {
+    func fetchWeather(_ city: String) {
         let apiCallUrl = "\(weatherURL)&q=\(city)&appid=\(apiKey)"
+        performRequest(with: apiCallUrl)
+    }
+    
+    func fetchWeather(_ lat: Double, _ lon: Double) {
+        let apiCallUrl = "\(weatherURL)&lat=\(lat)&lon=\(lon)&appid=\(apiKey)"
         performRequest(with: apiCallUrl)
     }
     

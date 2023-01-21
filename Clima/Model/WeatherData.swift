@@ -8,16 +8,17 @@
 
 import Foundation
 
-struct WeatherData: Decodable {
+// Mirror's OpenWeatherMap API JSON response.
+struct WeatherData: Codable {
     let weather: [Weather]
     let main: Main
     let name: String
 }
 
-struct Weather: Decodable {
+struct Weather: Codable {
     let id: Int
 }
 
-struct Main: Decodable {
+struct Main: Codable {
     let temp: Double
 }

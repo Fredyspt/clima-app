@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreLocation
 
 class WeatherViewController: UIViewController {
     @IBOutlet weak var conditionImageView: UIImageView!
@@ -15,14 +16,28 @@ class WeatherViewController: UIViewController {
     @IBOutlet weak var searchTextField: UITextField!
     
     var weatherManager = WeatherManager()
+    let locationManager = CLLocationManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        locationManager.delegate = self
+        
+        // ask for permission to access user's location
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.requestLocation()
         
         // This will let the text field to report back to the controller
         // when certain events are triggered (focus-out, return, etc.)
         searchTextField.delegate = self
         weatherManager.delegate = self
+    }
+    
+    @IBAction func locationButtonPressed(_ sender: UIButton) {
+        locationManager.requestLocation()
+        if searchTextField.isEditing {
+            searchTextField.endEditing(true)
+        }
     }
 }
 
@@ -41,21 +56,11 @@ extension WeatherViewController: UITextFieldDelegate {
         return true
     }
     
-    // Verify if there textField has an input
-    func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
-        if let city = textField.text, city.isEmpty {
-            textField.placeholder = "Type a city!"
-            return false
-        } else {
-            return true
-        }
-    }
-    
     // Attempt to fetch the weather with the input from the text field.
     // Then clear the text field.
     func textFieldDidEndEditing(_ textField: UITextField) {
-        if let city = textField.text {
-            weatherManager.fetchWeather(city: city)
+        if let city = textField.text, !city.isEmpty {
+            weatherManager.fetchWeather(city)
         }
         textField.text = String()
     }
@@ -76,5 +81,22 @@ extension WeatherViewController: WeatherManagerDelegate {
     
     func didFailWithError(_ error: Error) {
         print(error)
+    }
+}
+
+//MARK - CLLocationManagerDelegate
+
+extension WeatherViewController: CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.last {
+            manager.stopUpdatingLocation()
+            let lat = location.coordinate.latitude
+            let lon = location.coordinate.longitude
+            weatherManager.fetchWeather(lat, lon)
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Error: \(error)")
     }
 }
